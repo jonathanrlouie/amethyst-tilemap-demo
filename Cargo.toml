@@ -1,0 +1,12 @@
+[package]
+name = "amethyst-tilemap-demo"
+version = "0.1.0"
+authors = ["Jonathan Louie <jonathanrlouie@gmail.com>"]
+
+[dependencies]
+amethyst = {git = "https://github.com/amethyst/amethyst", branch = "develop", commit = "c9594f8"}
+genmesh = "0.4"
+rayon = "0.8"
+gfx = { version = "0.16", features = ["serialize"] }
+derivative = "1.0"
+tiled = "0.7.2"
