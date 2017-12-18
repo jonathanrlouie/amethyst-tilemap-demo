@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Jonathan Louie <jonathanrlouie@gmail.com>"]
 
 [dependencies]
-amethyst = {git = "https://github.com/amethyst/amethyst", branch = "develop", commit = "c9594f8"}
+amethyst = {git = "https://github.com/amethyst/amethyst", rev = "c9594f8"}
 genmesh = "0.4"
 rayon = "0.8"
 gfx = { version = "0.16", features = ["serialize"] }
