@@ -1,9 +1,9 @@
 use amethyst::winit::{Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use amethyst::ecs::World;
-use amethyst::renderer::{PosTex, Camera, Mesh, Material, PngFormat, Projection};
+use amethyst::renderer::{Camera, Mesh, PngFormat, Projection};
 use amethyst::core::transform::{LocalTransform, Transform};
 use amethyst::assets::Loader;
-use amethyst::core::cgmath::{Vector3, Deg};
+use amethyst::core::cgmath::Vector3;
 
 use amethyst::prelude::*;
 

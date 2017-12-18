@@ -6,7 +6,6 @@ dependencies = [
  "derivative 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "genmesh 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "gfx 0.16.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "rayon 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "tiled 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

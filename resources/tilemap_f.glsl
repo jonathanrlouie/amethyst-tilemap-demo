@@ -1,6 +1,6 @@
 #version 150 core
 
-uniform sampler2D albedo;
+uniform sampler2D TilesheetTexture;
 
 const int TILEMAP_BUF_LENGTH = 4096;
 
@@ -20,7 +20,7 @@ in VertexData {
     vec2 tex_coord;
 } vertex;
 
-out vec4 color;
+out vec4 Color;
 
 void main() {
 
@@ -41,11 +41,11 @@ void main() {
 
         vec4 entry = u_Data[bufIdx];
         vec2 uvCoords = (entry.xy + rawUvOffsets) / u_TilesheetSize.xy;
-        texData = texture(albedo, uvCoords);
+        texData = texture(TilesheetTexture, uvCoords);
     } else {
         // if we're here it means the buftilecoords are outside the buffer, so let's just show black
         texData = vec4(0.0,0.0,0.0,1.0);
     }
 
-    color = texData;
+    Color = texData;
 }

@@ -4,9 +4,7 @@ use amethyst::assets::AssetStorage;
 use amethyst::core::cgmath::{Matrix4, One, SquareMatrix};
 use amethyst::core::transform::Transform;
 
-use rayon::iter::ParallelIterator;
-use rayon::iter::internal::UnindexedConsumer;
-use amethyst::ecs::{Fetch, Join, ParJoin, ReadStorage};
+use amethyst::ecs::{Fetch, Join, ReadStorage};
 
 use amethyst::renderer::{ActiveCamera, Camera, Material, MaterialDefaults, Encoder, Factory, Texture,
                          Position, Query, TexCoord, Mesh, MeshHandle};
@@ -94,8 +92,8 @@ where
             .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
             .with_raw_constant_buffer("TileMapBuffer", mem::size_of::<TileMapBuffer>(), 1)
             .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
-            .with_texture("albedo")
-            .with_output("color", Some(DepthMode::LessEqualWrite))
+            .with_texture("TilesheetTexture")
+            .with_output("Color", Some(DepthMode::LessEqualWrite))
             .build()
     }
 
@@ -157,14 +155,14 @@ where
                     }
                 });
 
-            let albedo = tex_storage
+            let tilesheet_texture = tex_storage
                 .get(&material.albedo)
                 .or_else(|| tex_storage.get(&material_defaults.0.albedo))
                 .unwrap();
 
             effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-            effect.data.textures.push(albedo.view().clone());
-            effect.data.samplers.push(albedo.sampler().clone());
+            effect.data.textures.push(tilesheet_texture.view().clone());
+            effect.data.samplers.push(tilesheet_texture.sampler().clone());
 
             let fragment_args = FragmentArgs {
                 u_world_size: [tilemap_dimensions.width as f32, tilemap_dimensions.height as f32, 0.0, 0.0],
