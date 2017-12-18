@@ -17,8 +17,11 @@ use amethyst::renderer::pipe::{DepthMode, Effect, NewEffect};
 
 use gfx::pso::buffer::ElemStride;
 
+use super::tilemap::{TilemapDimensions, TilesheetDimensions, TilemapTiles};
+
 const TILEMAP_VERT_SRC: &[u8] = include_bytes!("../../../resources/tilemap_v.glsl");
 const TILEMAP_FRAG_SRC: &[u8] = include_bytes!("../../../resources/tilemap_f.glsl");
+
 
 #[derive(Clone, Copy, Debug)]
 struct VertexArgs {
@@ -29,15 +32,14 @@ struct VertexArgs {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-struct BPsLocals {
+struct FragmentArgs {
     u_world_size: [f32; 4],
-    u_tilesheet_size: [f32; 4],
-    u_tile_offsets: [f32; 2],
+    u_tilesheet_size: [f32; 4]
 }
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct BTileMap {
+struct TileMapBuffer {
     u_data: [[f32; 4]; 4096]
 }
 
@@ -74,6 +76,9 @@ where
         ReadStorage<'a, MeshHandle>,
         ReadStorage<'a, Material>,
         ReadStorage<'a, Transform>,
+        ReadStorage<'a, TilemapDimensions>,
+        ReadStorage<'a, TilesheetDimensions>,
+        ReadStorage<'a, TilemapTiles>,
     );
 }
 
@@ -87,8 +92,8 @@ where
             .simple(TILEMAP_VERT_SRC, TILEMAP_FRAG_SRC)
             .with_raw_constant_buffer("VertexArgs", mem::size_of::<VertexArgs>(), 1)
             .with_raw_vertex_buffer(V::QUERIED_ATTRIBUTES, V::size() as ElemStride, 0)
-            .with_raw_constant_buffer("b_TileMap", mem::size_of::<BTileMap>(), 1)
-            .with_raw_constant_buffer("FragmentArgs", mem::size_of::<BPsLocals>(), 1)
+            .with_raw_constant_buffer("TileMapBuffer", mem::size_of::<TileMapBuffer>(), 1)
+            .with_raw_constant_buffer("FragmentArgs", mem::size_of::<FragmentArgs>(), 1)
             .with_texture("albedo")
             .with_output("color", Some(DepthMode::LessEqualWrite))
             .build()
@@ -99,7 +104,7 @@ where
         encoder: &mut Encoder,
         effect: &mut Effect,
         _factory: Factory,
-        (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global): (
+        (active, camera, mesh_storage, tex_storage, material_defaults, mesh, material, global, tilemap_dimensions, tilesheet_dimensions, tile_data): (
             Option<Fetch<'a, ActiveCamera>>,
             ReadStorage<'a, Camera>,
             Fetch<'a, AssetStorage<Mesh>>,
@@ -108,6 +113,9 @@ where
             ReadStorage<'b, MeshHandle>,
             ReadStorage<'b, Material>,
             ReadStorage<'b, Transform>,
+            ReadStorage<'b, TilemapDimensions>,
+            ReadStorage<'b, TilesheetDimensions>,
+            ReadStorage<'b, TilemapTiles>,
         ),
     ) {
         let camera: Option<(&Camera, &Transform)> = active
@@ -122,7 +130,7 @@ where
         let tex_storage = &tex_storage;
         let material_defaults = &material_defaults;
 
-        for (mesh, material, global) in (&mesh, &material, &global).join() {
+        for (mesh, material, global, tilemap_dimensions, tilesheet_dimensions, tile_data) in (&mesh, &material, &global, &tilemap_dimensions, &tilesheet_dimensions, &tile_data).join() {
             let mesh = match mesh_storage.get(mesh) {
                 Some(mesh) => mesh,
                 None => continue,
@@ -158,16 +166,12 @@ where
             effect.data.textures.push(albedo.view().clone());
             effect.data.samplers.push(albedo.sampler().clone());
 
-            let b_tile_map = BTileMap {
-                u_data: [[5.0, 5.0, 0.0, 0.0]; 4096]
+            let fragment_args = FragmentArgs {
+                u_world_size: [tilemap_dimensions.width as f32, tilemap_dimensions.height as f32, 0.0, 0.0],
+                u_tilesheet_size: [tilesheet_dimensions.width as f32, tilesheet_dimensions.height as f32, 0.0, 0.0]
             };
-            let b_ps_locals = BPsLocals {
-                u_world_size: [12.0, 8.0, 1.0, 0.0],
-                u_tilesheet_size: [14.0, 9.0, 0.0, 0.0],
-                u_tile_offsets: [0f32; 2],
-            };
-            effect.update_constant_buffer("b_TileMap", &b_tile_map, encoder);
-            effect.update_constant_buffer("FragmentArgs", &b_ps_locals, encoder);
+            effect.update_buffer("TileMapBuffer", &tile_data.tiles[..], encoder);
+            effect.update_constant_buffer("FragmentArgs", &fragment_args, encoder);
 
             effect.data.vertex_bufs.push(vbuf);
 

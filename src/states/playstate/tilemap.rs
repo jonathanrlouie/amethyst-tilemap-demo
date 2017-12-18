@@ -4,10 +4,7 @@ use genmesh::generators::{Plane, SharedVertex, IndexedPolygon};
 use genmesh::{Triangulate, Vertices};
 use tiled;
 
-pub fn gen_tilemap_plane() -> Vec<PosTex> {
-    let tilesize = 32;
-    let tilemap_width = 12;
-    let tilemap_height = 8;
+pub fn gen_tilemap_plane(tilesize: u32, tilemap_width: u32, tilemap_height: u32) -> Vec<PosTex> {
     let plane = Plane::subdivide(tilemap_width as usize, tilemap_height as usize);
 
     let half_width = (tilesize * tilemap_width) / 2;
@@ -24,7 +21,7 @@ pub fn gen_tilemap_plane() -> Vec<PosTex> {
 
         PosTex {
             position: [vertex_x, vertex_y, 0.0],
-            tex_coord: [tilemap_x as f32, tilemap_y as f32]
+            tex_coord: [tilemap_x as f32, tilemap_height as f32 - tilemap_y as f32]
         }
     }).collect();
 
@@ -37,33 +34,51 @@ pub fn gen_tilemap_plane() -> Vec<PosTex> {
     indexed_vertex_data
 }
 
-/*
-#[derive(Clone, Eq, Hash, PartialEq)]
-pub struct TilemapImage {
-    pub source: String
+pub fn generate_tile_data(map: &tiled::Map, tileset_width: u32, tileset_height: u32) -> Vec<[f32; 4]> {
+    let mut tiles = Vec::new();
+    let layers = &map.layers;
+    for layer in layers {
+        for rows in &layer.tiles {
+            for tile in rows {
+                if *tile != 0 {
+                    // subtract 1.0 from the x coordinate because the first gid of the tileset is 1
+                    // this could be made cleaner
+                    tiles.push([*tile as f32 % tileset_width as f32 - 1.0, (tileset_height - 1)  as f32 - ((*tile / tileset_width) as f32), 0.0, 0.0]);
+                } else {
+                    tiles.push([0.0, 0.0, 0.0, 0.0]);
+                }
+
+            }
+        }
+    }
+    tiles
 }
 
-impl Component for TilemapImage {
-    type Storage = DenseVecStorage<Self>;
-}
-
-
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone)]
 pub struct TilemapDimensions {
-    pub map_width: u32,
-    pub map_height: u32,
-    pub tile_size: u32
+    pub width: u32,
+    pub height: u32
 }
 
 impl Component for TilemapDimensions {
     type Storage = DenseVecStorage<Self>;
 }
 
-#[derive(Clone, Eq, Hash, PartialEq)]
+#[derive(Clone)]
+pub struct TilesheetDimensions {
+    pub width: u32,
+    pub height: u32
+}
+
+impl Component for TilesheetDimensions {
+    type Storage = DenseVecStorage<Self>;
+}
+
+#[derive(Clone)]
 pub struct TilemapTiles {
     pub tiles: Vec<[f32; 4]>,
 }
 
 impl Component for TilemapTiles {
     type Storage = DenseVecStorage<Self>;
-}*/
+}

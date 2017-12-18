@@ -7,12 +7,19 @@ use amethyst::core::cgmath::{Vector3, Deg};
 
 use amethyst::prelude::*;
 
+use std::path::Path;
+use std::fs::File;
+use tiled::parse;
+
 use super::tilemap;
 
 pub struct PlayState;
 
 impl State for PlayState {
     fn on_start(&mut self, world: &mut World) {
+        world.register::<tilemap::TilemapDimensions>();
+        world.register::<tilemap::TilesheetDimensions>();
+        world.register::<tilemap::TilemapTiles>();
         initialise_camera(world);
         initialise_tilemap(world);
     }
@@ -57,11 +64,36 @@ fn initialise_tilemap(world: &mut World) {
     use amethyst::assets::Handle;
     use amethyst::renderer::{Material, MaterialDefaults};
 
+    let map_file = File::open(&Path::new("./resources/map.tmx")).unwrap();
+    let map = parse(map_file).unwrap();
+    let tileset = map.tilesets.get(0).unwrap();
+    let tileset_img = &tileset.images.get(0).unwrap();
+    let tileset_width = tileset_img.width as u32 / tileset.tile_width;
+    let tileset_height = tileset_img.height as u32 / tileset.tile_height;
+    let image_source = &tileset_img.source;
+
+    let tilemap_dimensions = tilemap::TilemapDimensions {
+        width: map.width,
+        height: map.height
+    };
+
+    let tilesheet_dimensions = tilemap::TilesheetDimensions {
+        width: tileset_width,
+        height: tileset_height
+    };
+
+    let tiles = tilemap::TilemapTiles {
+        tiles: tilemap::generate_tile_data(&map, tileset_width, tileset_height)
+    };
+
+    let half_width: f32 = ((map.width * map.tile_width) / 2) as f32;
+    let half_height: f32 = ((map.height * map.tile_height) / 2) as f32;
+
     let (mesh, material) = {
         let loader = world.read_resource::<Loader>();
 
         let mesh: Handle<Mesh> =
-        loader.load_from_data(tilemap::gen_tilemap_plane().into(), (), &world.read_resource());
+        loader.load_from_data(tilemap::gen_tilemap_plane(map.tile_width, map.width, map.height).into(), (), &world.read_resource());
 
         let mat_defaults = world.read_resource::<MaterialDefaults>();
 
@@ -69,7 +101,7 @@ fn initialise_tilemap(world: &mut World) {
 
         let tilemap_material = Material {
             albedo: loader.load(
-                "../resources/scifitiles-sheet_0.png",
+                format!("{}{}", "../resources/", image_source),
                 PngFormat,
                 Default::default(),
                 (),
@@ -82,12 +114,15 @@ fn initialise_tilemap(world: &mut World) {
     };
 
     let mut transform = LocalTransform::default();
-    transform.translation = Vector3::new(192.0, 128.0, 0.0);
+    transform.translation = Vector3::new(half_width, half_height, 0.0);
     world
         .create_entity()
         .with(mesh)
         .with(material)
         .with(transform)
         .with(Transform::default())
+        .with(tilemap_dimensions)
+        .with(tilesheet_dimensions)
+        .with(tiles)
         .build();
 }
