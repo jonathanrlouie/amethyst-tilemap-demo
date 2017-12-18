@@ -4,7 +4,7 @@ use genmesh::generators::{Plane, SharedVertex, IndexedPolygon};
 use genmesh::{Triangulate, Vertices};
 use tiled;
 
-pub fn gen_tilemap_plane(tilesize: u32, tilemap_width: u32, tilemap_height: u32) -> Vec<PosTex> {
+pub fn generate_tilemap_plane(tilesize: u32, tilemap_width: u32, tilemap_height: u32) -> Vec<PosTex> {
     let plane = Plane::subdivide(tilemap_width as usize, tilemap_height as usize);
 
     let half_width = (tilesize * tilemap_width) / 2;

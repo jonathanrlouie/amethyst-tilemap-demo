@@ -64,10 +64,27 @@ fn initialise_tilemap(world: &mut World) {
     use amethyst::assets::Handle;
     use amethyst::renderer::{Material, MaterialDefaults};
 
-    let map_file = File::open(&Path::new("./resources/map.tmx")).unwrap();
-    let map = parse(map_file).unwrap();
-    let tileset = map.tilesets.get(0).unwrap();
-    let tileset_img = &tileset.images.get(0).unwrap();
+    let map_file = match File::open(&Path::new("./resources/map.tmx")) {
+        Err(e) => {
+            eprintln!("Error opening .tmx file: {}", e);
+            return
+        },
+        Ok(f) => f,
+    };
+    let map = match parse(map_file) {
+        Err(e) => {
+            eprintln!("Error while parsing .tmx file: {}", e);
+            return
+        },
+        Ok(m) => m,
+    };
+    let (tileset, tileset_img) = match map.tilesets.get(0) {
+        Some(tileset) => match tileset.images.get(0) {
+            Some(img) => (tileset, img),
+            None => return
+        },
+        None => return
+    };
     let tileset_width = tileset_img.width as u32 / tileset.tile_width;
     let tileset_height = tileset_img.height as u32 / tileset.tile_height;
     let image_source = &tileset_img.source;
@@ -93,7 +110,7 @@ fn initialise_tilemap(world: &mut World) {
         let loader = world.read_resource::<Loader>();
 
         let mesh: Handle<Mesh> =
-        loader.load_from_data(tilemap::gen_tilemap_plane(map.tile_width, map.width, map.height).into(), (), &world.read_resource());
+        loader.load_from_data(tilemap::generate_tilemap_plane(map.tile_width, map.width, map.height).into(), (), &world.read_resource());
 
         let mat_defaults = world.read_resource::<MaterialDefaults>();
 
