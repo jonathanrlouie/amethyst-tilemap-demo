@@ -5,4 +5,4 @@ This is based off of the ubo_tilemap example from gfx.
 
 ## Screenshot
 
-![Amethyst TileMap Example](screenshot.png)
+![Amethyst TileMap Example](screenshot.PNG)
