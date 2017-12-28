@@ -147,13 +147,13 @@ where
                         model: *global.as_ref(),
                     }
                 })
-                .unwrap_or_else(|| {
+                .unwrap_or(
                     VertexArgs {
                         proj: Matrix4::one().into(),
                         view: Matrix4::one().into(),
                         model: *global.as_ref(),
                     }
-                });
+                );
 
             let tilesheet_texture = tex_storage
                 .get(&material.albedo)

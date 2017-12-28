@@ -43,7 +43,7 @@ pub fn generate_tile_data(map: &tiled::Map, tileset_width: u32, tileset_height: 
                 if *tile != 0 {
                     // subtract 1.0 from the x coordinate because the first gid of the tileset is 1
                     // this could be made cleaner
-                    tiles.push([*tile as f32 % tileset_width as f32 - 1.0, (tileset_height - 1)  as f32 - ((*tile / tileset_width) as f32), 0.0, 0.0]);
+                    tiles.push([(*tile - 1) as f32 % tileset_width as f32, (tileset_height - 1)  as f32 - ((*tile / tileset_width) as f32), 0.0, 0.0]);
                 } else {
                     tiles.push([0.0, 0.0, 0.0, 0.0]);
                 }
