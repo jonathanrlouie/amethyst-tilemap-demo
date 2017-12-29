@@ -7,21 +7,23 @@ use tiled;
 pub fn generate_tilemap_plane(tilesize: u32, tilemap_width: u32, tilemap_height: u32) -> Vec<PosTex> {
     let plane = Plane::subdivide(tilemap_width as usize, tilemap_height as usize);
 
-    let half_width = (tilesize * tilemap_width) / 2;
-    let half_height = (tilesize * tilemap_height) / 2;
+    let half_width = (tilesize * tilemap_width) as f32 / 2.0 ;
+    let half_height = (tilesize * tilemap_height) as f32 / 2.0;
 
     let vertex_data: Vec<PosTex> = plane.shared_vertex_iter().map(|(raw_x, raw_y)| {
-        let vertex_x = half_width as f32 * raw_x;
-        let vertex_y = half_height as f32 * raw_y;
+
+        let vertex_x = (half_width * raw_x).round();
+        let vertex_y = (half_height * raw_y).round();
 
         let u_pos = (1.0 + raw_x) / 2.0;
         let v_pos = (1.0 + raw_y) / 2.0;
-        let tilemap_x = (u_pos * tilemap_width as f32).floor();
-        let tilemap_y = (v_pos * tilemap_height as f32).floor();
+
+        let tilemap_x = (u_pos * tilemap_width as f32).round();
+        let tilemap_y = (v_pos * tilemap_height as f32).round();
 
         PosTex {
             position: [vertex_x, vertex_y, 0.0],
-            tex_coord: [tilemap_x as f32, tilemap_height as f32 - tilemap_y as f32]
+            tex_coord: [tilemap_x, tilemap_height as f32 - tilemap_y]
         }
     }).collect();
 
