@@ -143,11 +143,13 @@ where
                 .map(|&(ref cam, ref transform)| {
                     VertexArgs {
                         proj: cam.proj.into(),
-                        view: transform.0.invert().unwrap().into(),
+                        view: transform.0.invert()
+                            .unwrap_or_else(|| Matrix4::one())
+                            .into(),
                         model: *global.as_ref(),
                     }
                 })
-                .unwrap_or(
+                .unwrap_or_else(||
                     VertexArgs {
                         proj: Matrix4::one().into(),
                         view: Matrix4::one().into(),
@@ -155,14 +157,15 @@ where
                     }
                 );
 
-            let tilesheet_texture = tex_storage
+            let option_tilesheet_texture = tex_storage
                 .get(&material.albedo)
-                .or_else(|| tex_storage.get(&material_defaults.0.albedo))
-                .unwrap();
+                .or_else(|| tex_storage.get(&material_defaults.0.albedo));
 
-            effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
-            effect.data.textures.push(tilesheet_texture.view().clone());
-            effect.data.samplers.push(tilesheet_texture.sampler().clone());
+            if let Some(tilesheet_texture) = option_tilesheet_texture {
+                effect.update_constant_buffer("VertexArgs", &vertex_args, encoder);
+                effect.data.textures.push(tilesheet_texture.view().clone());
+                effect.data.samplers.push(tilesheet_texture.sampler().clone());
+            }
 
             let fragment_args = FragmentArgs {
                 u_world_size: [tilemap_dimensions.width as f32, tilemap_dimensions.height as f32, 0.0, 0.0],
